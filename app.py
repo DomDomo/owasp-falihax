@@ -26,7 +26,7 @@ def user_loader(username):
     connection = sqlite3.connect("falihax.db")
     connection.row_factory = sqlite3.Row
     cursor = connection.cursor()
-    cursor.execute("select * from users where username = \"" + str(username) + "\"")
+    cursor.execute("select * from users where username = ?", (username,))
     account = cursor.fetchone()
     connection.close()
     if not account:
@@ -44,7 +44,7 @@ def request_loader(request):
     connection = sqlite3.connect("falihax.db")
     connection.row_factory = sqlite3.Row
     cursor = connection.cursor()
-    cursor.execute("select * from users where username = \"" + str(username) + "\"")
+    cursor.execute("select * from users where username = ?", (username,))
     account = cursor.fetchone()
     connection.close()
     if not account:
@@ -121,7 +121,7 @@ def login():
     connection = sqlite3.connect("falihax.db")
     connection.row_factory = sqlite3.Row
     cursor = connection.cursor()
-    cursor.execute("select password from users where username = \"" + str(username) + "\"")
+    cursor.execute("select password from users where username = ?", (username,))
     password_row = cursor.fetchone()
     connection.close()
 
@@ -165,7 +165,7 @@ def signup():
     connection = sqlite3.connect("falihax.db")
     connection.row_factory = sqlite3.Row
     cursor = connection.cursor()
-    cursor.execute("select * from users where username = \"" + str(username) + "\"")
+    cursor.execute("select * from users where username = ?", (username,))
     row = cursor.fetchone()
     connection.close()
 
@@ -183,8 +183,8 @@ def signup():
     connection.row_factory = sqlite3.Row
     cursor = connection.cursor()
     # encrypt the password with rot-13 cryptography
-    cursor.execute("insert into users (username, password, fullname) values (\"" + str(username) + "\", \""
-                   + encode(str(password), 'rot_13') + "\", \"" + str(fullname) + "\")")
+    cursor.execute("insert into users (username, password, fullname) values (?, ?, ?)",
+    (username, encode(str(password), 'rot_13'), fullname))
     connection.commit()
     connection.close()
     # Redirects to login page
@@ -232,8 +232,7 @@ def open_account():
         connection = sqlite3.connect("falihax.db")
         connection.row_factory = sqlite3.Row
         cursor = connection.cursor()
-        cursor.execute("select * from bank_accounts where sort_code = \"" + sort + "\" or account_number = \"" + acc +
-                       "\"")
+        cursor.execute("select * from bank_accounts where sort_code = ? or account_number = ?", (sort, acc))
         row = cursor.fetchone()
         connection.close()
 
@@ -249,8 +248,8 @@ def open_account():
     connection = sqlite3.connect("falihax.db")
     connection.row_factory = sqlite3.Row
     cursor = connection.cursor()
-    cursor.execute("insert into bank_accounts (username, sort_code, account_number, account_name) values (\""
-                   + str(username) + "\", \"" + str(sort) + "\", \"" + str(acc) + "\", \"" + str(account) + "\")")
+    cursor.execute("insert into bank_accounts (username, sort_code, account_number, account_name) values (?, ?, ?, ?)",
+    (username, sort, acc, account))
     connection.commit()
     connection.close()
 
@@ -280,8 +279,7 @@ def make_transaction():
     connection = sqlite3.connect("falihax.db")
     connection.row_factory = sqlite3.Row
     cursor = connection.cursor()
-    cursor.execute("select * from bank_accounts where sort_code = \"" + sort + "\" and account_number = \"" + acc +
-                   "\"")
+    cursor.execute("select * from bank_accounts where sort_code = ? and account_number = ?", (sort, acc))
     row = cursor.fetchone()
     connection.close()
 
@@ -298,10 +296,11 @@ def make_transaction():
     connection = sqlite3.connect("falihax.db")
     connection.row_factory = sqlite3.Row
     cursor = connection.cursor()
-    cursor.execute("select * from bank_accounts where username = \"" + username + "\" and sort_code = \"" + usersort +
-                   "\" and account_number = \"" + useracc + "\"")
+    cursor.execute("select * from bank_accounts where username = ? and sort_code = ? and account_number = ?",
+    (username, usersort, useracc))
     row = cursor.fetchone()
     connection.close()
+    
 
     # If nothing is retrieved then the details are incorrect
     if row is None:
@@ -313,8 +312,8 @@ def make_transaction():
     connection.row_factory = sqlite3.Row
     cursor = connection.cursor()
     cursor.execute("insert into transactions (from_sort_code, from_account_number, to_sort_code, to_account_number, "
-                   "amount) values (\"" + usersort + "\", \"" + useracc + "\", \"" + str(sort) + "\", \"" + str(acc) +
-                   "\", \"" + str(amount) + "\")")
+                   "amount) values (?, ?, ?, ?, ?)", (usersort, useracc, sort, acc, amount))
+    
     connection.commit()
     connection.close()
 
@@ -329,7 +328,7 @@ def admin():
     """Allows admins to adjust users' credit scores"""
 
     # Redirects the user to the login page if they are not an admin
-    if current_user.id != "admin":
+    if not current_user.is_authenticated or current_user.id != "admin":
         flash('You must be an admin to view that page.', 'danger')
         return redirect(url_for('login'))
 
@@ -345,7 +344,7 @@ def admin():
     connection = sqlite3.connect("falihax.db")
     connection.row_factory = sqlite3.Row
     cursor = connection.cursor()
-    cursor.execute("select * from users where username = \"" + str(username) + "\"")
+    cursor.execute("select * from users where username = ?", (username,))
     row = cursor.fetchone()
     connection.close()
 
@@ -358,7 +357,7 @@ def admin():
     connection = sqlite3.connect("falihax.db")
     connection.row_factory = sqlite3.Row
     cursor = connection.cursor()
-    cursor.execute("update users set credit_score = " + str(score) + " where username = \"" + username + "\"")
+    cursor.execute("update users set credit_score = ? where username = ?", (score, username))
     connection.commit()
     connection.close()
 
@@ -377,7 +376,7 @@ def get_accounts(username: str) -> List[Dict[str, str]]:
     connection.row_factory = sqlite3.Row
     cursor = connection.cursor()
     cursor.execute(
-        "select sort_code, account_number, account_name from bank_accounts where username = \"" + str(username) + "\"")
+        "select sort_code, account_number, account_name from bank_accounts where username = ?", (username,))
     rows = cursor.fetchall()
     connection.close()
 
@@ -424,7 +423,7 @@ def dashboard():
     connection = sqlite3.connect("falihax.db")
     connection.row_factory = sqlite3.Row
     cursor = connection.cursor()
-    score = cursor.execute("select credit_score from users where username = \"" + username + "\"").fetchone()[0]  
+    score = cursor.execute("select credit_score from users where username = ?", (username,)).fetchone()[0]  
     credit_score = int(score if score else 0)
     connection.close()
     # Retrieves the current user's username from the session and gets their accounts
@@ -446,7 +445,7 @@ def account(sort_code: str, account_number: str):
     connection = sqlite3.connect("falihax.db")
     connection.row_factory = sqlite3.Row
     cursor = connection.cursor()
-    cursor.execute("select sort_code, account_number from bank_accounts where username = \"" + str(username) + "\"")
+    cursor.execute("select sort_code, account_number from bank_accounts where username = ?", (username,))
     rows = cursor.fetchall()
     connection.close()
 
