@@ -1,6 +1,17 @@
 <img src="static/falihax.png" width="200" />
 
-# Falihax OWASP Hackathon
+# Falihax OWASP Hackathon Solution
+
+## Main Security Changes
+1. Restricted access to pages for users without proper validation.
+2. Sanitized all `cursor.execute()` function calls to prevent SQL injections from user input.
+3. Enforced strong password principles on signup to make sure users don't have weak passwords.
+4. Replaced the ROT13 substitution cipher to the bcrypt salted hashing algorithm for passwords.
+
+### Potential changes
+These are changes I would have made, however, I felt they would have interfered with testing.
+1. Removing all the users in the database without hashed passwords.
+2. Creating an admin account (The only way to visit `/admin` is by creating a user with the username `admin`).
 
 ## Premise
 Falihax is a brand new, 100%* real and secure banking company. Last year, they
