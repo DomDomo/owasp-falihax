@@ -6,6 +6,7 @@ from codecs import encode
 import flask_login
 import sqlite3
 import random
+import re
 
 from flask_login import current_user
 
@@ -99,6 +100,11 @@ def amount_format(amount: int) -> str:
     """
     return f"{'-' if amount < 0 else ''}£{(abs(amount) // 100):,}.{(abs(amount) % 100):02}"
 
+def strong_password(password):
+    reg = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!#%*?&]{6,20}$"
+    pattern = pat = re.compile(reg)
+
+    return re.search(pat, password)
 
 @app.route("/")
 @add_to_navbar("Home")
@@ -177,6 +183,17 @@ def signup():
     # Retrieves the password and name from the form
     password = request.form['password']
     fullname = request.form['fullname']
+
+    if not strong_password(password):
+        message = '''
+            Password must have:\n
+                at least one number,
+                at least one uppercase and one lowercase character,
+                at least one special symbol,
+                and be between 6 to 20 characters long.
+        '''
+        flash(message, 'warning')
+        return render_template("signup.html")
 
     # Inserts the new account details into the database
     connection = sqlite3.connect("falihax.db")
