@@ -408,8 +408,8 @@ def dashboard():
     connection = sqlite3.connect("falihax.db")
     connection.row_factory = sqlite3.Row
     cursor = connection.cursor()
-    credit_score = int(
-        cursor.execute("select credit_score from users where username = \"" + username + "\"").fetchone()[0])
+    score = cursor.execute("select credit_score from users where username = \"" + username + "\"").fetchone()[0]  
+    credit_score = int(score if score else 0)
     connection.close()
     # Retrieves the current user's username from the session and gets their accounts
     return render_template("dashboard.html", accounts=get_accounts(flask_login.current_user.id), credit_score=credit_score)
