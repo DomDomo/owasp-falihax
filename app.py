@@ -1,4 +1,5 @@
 from typing import Callable, Optional, List, Dict
+from xml.dom.minidom import Element
 
 from flask import Flask, render_template, request, redirect, url_for, flash
 from codecs import encode
@@ -52,6 +53,12 @@ def request_loader(request):
     user = User()
     user.id = username
     return user
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    """Redirect unauthorized users to Login page."""
+    flash('You must be logged in to view that page.', 'danger')
+    return redirect(url_for('login'))
 
 
 @app.context_processor
@@ -186,6 +193,7 @@ def signup():
 
 
 @app.route('/open_account', methods=['GET', 'POST'])
+@flask_login.login_required
 @add_to_navbar("Open an Account", condition=lambda: current_user.is_authenticated)
 def open_account():
     """Used to open a bank account for the current user"""
@@ -252,6 +260,7 @@ def open_account():
 
 
 @app.route('/make_transaction', methods=['GET', 'POST'])
+@flask_login.login_required
 @add_to_navbar("Make Transaction", condition=lambda: current_user.is_authenticated)
 def make_transaction():
     """Used to make a transaction"""
@@ -318,6 +327,12 @@ def make_transaction():
 @add_to_navbar("Admin", condition=lambda: current_user.is_authenticated and current_user.id == "admin")
 def admin():
     """Allows admins to adjust users' credit scores"""
+
+    # Redirects the user to the login page if they are not an admin
+    if current_user.id != "admin":
+        flash('You must be an admin to view that page.', 'danger')
+        return redirect(url_for('login'))
+
     # Returns a credit score form when the user navigates to the page
     if request.method == 'GET':
         return render_template("admin.html")
@@ -400,6 +415,7 @@ def get_accounts(username: str) -> List[Dict[str, str]]:
 
 
 @app.route('/dashboard')
+@flask_login.login_required
 @add_to_navbar("Dashboard", condition=lambda: current_user.is_authenticated)
 def dashboard():
     """Allows the user to view their accounts"""
@@ -416,11 +432,30 @@ def dashboard():
 
 
 @app.route('/account/<sort_code>/<account_number>')
+@flask_login.login_required
 def account(sort_code: str, account_number: str):
     """Allows the user to view the statements for an account"""
+
+    print(current_user)
+
     # Retrieves the current user's username from the session
     user = flask_login.current_user
     username = user.id
+
+    # Finds the all sort_code and account_number combos of the user
+    connection = sqlite3.connect("falihax.db")
+    connection.row_factory = sqlite3.Row
+    cursor = connection.cursor()
+    cursor.execute("select sort_code, account_number from bank_accounts where username = \"" + str(username) + "\"")
+    rows = cursor.fetchall()
+    connection.close()
+
+    user_accounts = [tuple(table_row) for table_row in rows]
+
+    # Redirects the user to their dashboard if they try to access a diffrent account
+    if (sort_code, account_number) not in user_accounts:
+        flash('You do not have access to that account.', 'danger')
+        return redirect(url_for('dashboard'))
 
     # Attempts to retrieve any bank accounts that belong to the current user
     connection = sqlite3.connect("falihax.db")
@@ -464,6 +499,7 @@ def account(sort_code: str, account_number: str):
         })
 
     return render_template("account.html", transactions=transactions, balance=balance)
+
 
 
 if __name__ == '__main__':
