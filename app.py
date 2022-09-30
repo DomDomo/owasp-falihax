@@ -9,8 +9,10 @@ import random
 import re
 
 from flask_login import current_user
+from flask_bcrypt import Bcrypt
 
 app = Flask(__name__)
+bcrypt = Bcrypt(app)
 app.secret_key = 'hello'
 login_manager = flask_login.LoginManager()
 navbar_page_names = dict()
@@ -132,7 +134,7 @@ def login():
     connection.close()
 
     # Checks that the password has been retrieved and whether it matches the password entered by the user
-    if password_row is not None and password_row[0] == encode(request.form['password'], 'rot_13'):
+    if password_row is not None and bcrypt.check_password_hash(password_row[0], request.form['password']):
         # Logs the user in if the details are correct
         user = User()
         user.id = username
@@ -195,13 +197,15 @@ def signup():
         flash(message, 'warning')
         return render_template("signup.html")
 
+    pw_hash = bcrypt.generate_password_hash(password)
+
     # Inserts the new account details into the database
     connection = sqlite3.connect("falihax.db")
     connection.row_factory = sqlite3.Row
     cursor = connection.cursor()
     # encrypt the password with rot-13 cryptography
     cursor.execute("insert into users (username, password, fullname) values (?, ?, ?)",
-    (username, encode(str(password), 'rot_13'), fullname))
+    (username, pw_hash, fullname))
     connection.commit()
     connection.close()
     # Redirects to login page
@@ -451,8 +455,6 @@ def dashboard():
 @flask_login.login_required
 def account(sort_code: str, account_number: str):
     """Allows the user to view the statements for an account"""
-
-    print(current_user)
 
     # Retrieves the current user's username from the session
     user = flask_login.current_user
