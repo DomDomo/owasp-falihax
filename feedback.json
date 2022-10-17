@@ -1,0 +1,80 @@
+{
+  "repo": "DomDomo/owasp-falihax",
+  "summary": "A good attempt at securing the web app. While there are further ways to improve the security, your version is definitely a vast improvement on the original! Nice work!",
+  "found_vulns": [
+    {
+      "id": "A01-01",
+      "marks": {
+        "state": true,
+        "show": false,
+        "demo": false,
+        "mitigate": false,
+        "attempt": true,
+        "works": true,
+        "explain": false
+      }
+    },
+    {
+      "id": "A01-02",
+      "marks": {
+        "state": false,
+        "show": false,
+        "demo": false,
+        "mitigate": false,
+        "attempt": true,
+        "works": true,
+        "explain": false
+      },
+      "note": "This bug is successfully fixed [here](https://github.com/DomDomo/owasp-falihax/blob/c26c74decf3fed26c8cc6755e5a84bda4ab18903/app.py#L463-L476), however it would have been more efficient (and saved you some time) to use the [`get_accounts()`](https://github.com/DomDomo/owasp-falihax/blob/c26c74decf3fed26c8cc6755e5a84bda4ab18903/app.py#L389-L434) function to retrieve sort codes and account numbers for the user!"
+    },
+    {
+      "id": "A01-03",
+      "marks": {
+        "state": false,
+        "show": false,
+        "demo": false,
+        "mitigate": false,
+        "attempt": true,
+        "works": true,
+        "explain": false
+      }
+    },
+    {
+      "id": "A02-01",
+      "marks": {
+        "state": true,
+        "show": false,
+        "demo": false,
+        "mitigate": false,
+        "attempt": true,
+        "works": true,
+        "explain": false
+      }
+    },
+    {
+      "id": "A03-01",
+      "marks": {
+        "state": true,
+        "show": false,
+        "demo": false,
+        "mitigate": false,
+        "attempt": true,
+        "works": true,
+        "explain": false
+      }
+    },
+    {
+      "id": "A04-02",
+      "marks": {
+        "state": true,
+        "show": false,
+        "demo": false,
+        "mitigate": false,
+        "attempt": true,
+        "works": true,
+        "explain": false
+      },
+      "note": "Related to this, you could also have implemented some kind of rate-limiting (A04-03) which would improve the resistance to brute force attacks."
+    }
+  ]
+}
